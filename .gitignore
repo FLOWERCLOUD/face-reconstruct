@@ -1,2 +1,11 @@
 *.pyc
 models/
+__pycache__
+bayesian_matting_master/__pycache__
+uv_mapping
+texpc
+output
+landmark_embedding_squence_openmouse
+landmark_embedding_squence
+embree_hit_normal.obj
+embree_hit.obj

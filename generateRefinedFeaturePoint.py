@@ -6,7 +6,7 @@ import pyigl as igl
 from os.path import join
 from fitting.util import safe_mkdir, mat_save,mat_load,IglMatrixTonpArray,FileFilt,write_simple_obj,k_main_dir_sklearn
 from fitting.util import readImage,write_image_and_featurepoint,read_landmark,\
-    cast2d_to3d,scaleToOriCoodi_bottomleft,sym_plane,corr_point
+    cast2d_to3d,scaleToOriCoodi_bottomleft,sym_plane,corr_point,sym_point,convertObj2Mat,convertMat2obj
 
 import numpy as np
 import random
@@ -35,6 +35,12 @@ landmark_face = np.array([[57,8,9],[57,9,56],[56,9,10],[56,10,55],[55,10,11],[55
 [49,60,61],[49,61,50],[50,61,62],[50,62,51],[48,59,60],[59,67,60],[67,59,58],
 [67,58,66],[66,58,57]])
 
+point_sym = { 0:16,1:15,2:14,3:13,4:12,5:11,6:10,7:9,8:8,9:7,10:6,11:5,12:4,
+             13:3,14:2,15:1,16:0,17:26,18:25,19:24,20:23,21:22,22:21,23:20,
+             24:19,25:18,26:17,27:27,28:28,29:29,30:30,31:35,32:34,33:33,34:32,35:31,
+             36:45,37:44,38:43,39:42,40:47,41:46,42:39,43:38,44:37,45:36,46:41,47:40,
+             48:54,49:53,50:52,51:51,52:50,53:49,54:48,55:59,56:58,57:57,58:56,59:55,
+             60:64,61:63,62:62,63:61,64:60,65:67,66:66,67:65}
 b = FileFilt()
 targetdir = projectdir+objeectdir
 b.FindFile(dirr=targetdir)
@@ -84,8 +90,30 @@ for k in b.fileList:
     print("Press '3' for per-corner normals.")
     viewer.launch()
     '''
+    #convertObj2Mat(objdir + '/Target_cut' + '.obj',objdir + '/Target_cut.mat')
+#    convertObj2Mat('D:/mprojects/nricp-master/nricp-master/data' + '/faceSource_align' + '.obj','D:/mprojects/nricp-master/nricp-master/data' + '/faceSource_align.mat',0)
+#    convertObj2Mat('D:/mprojects/nricp-master/nricp-master/data' + '/target_scaled' + '.obj',
+#                   'D:/mprojects/nricp-master/nricp-master/data' + '/target_scaled.mat',1)
+    #convertMat2obj('D:/mprojects/nricp-master/nricp-master/data' + '/faceSource.mat',
+     #              'D:/mprojects/nricp-master/nricp-master/data' + '/faceSource' + '.obj')
+    convertMat2obj('D:/mprojects/nricp-master/nricp-master/data' + '/Tramsformed.mat',
+                   'D:/mprojects/nricp-master/nricp-master/data' + '/Tramsformed' + '.obj','Tramsformed')
+
+    break;
     N_vertices = np.array(N_vertices)
     V_np = np.array(V_igl)
+
+    Target = {'vertices':V,'faces':F+1,'normals':N_vertices}
+    Target = {'Target':Target}
+    mat_save(Target, objdir + '/Target' + '.mat')
+    igl.writeOBJ(objdir + '/Target' + '.obj', igl.eigen.MatrixXd(V_np.astype('float64')),
+                    igl.eigen.MatrixXi(F.astype('intc')),igl.eigen.MatrixXd(N_vertices.astype('float64')),
+                 igl.eigen.MatrixXi(F.astype('intc')),igl.eigen.MatrixXd(),igl.eigen.MatrixXi())
+
+
+    break
+
+
     mesh_center ,main_dir,eigenvalues =k_main_dir_sklearn(V_np,3)
     main_dir = np.array(main_dir)
     fig = plt.figure(figsize=plt.figaspect(1))
@@ -148,7 +176,11 @@ for k in b.fileList:
     landmark_f = np.array(landmark_f)
     for i  in [27,28,29,30,33,51,62,66,57,8]:
         landmark_v[i,:] =corr_point(front_dir,up_dir,vertical_normal,mesh_center,landmark_v[i,:])
-    igl.writeOBJ(objdir + '/01_corr_landmark_cast' + '.obj', igl.eigen.MatrixXd(landmark_v.astype('float64')),
+    for i in [9,10,11,12,13,14,15,16,22,23,24,25,26,34,35,42,43,44,45,46,47,52,53,54,55,56,63,64,65]:
+        sym_idx = point_sym[i]
+        landmark_v[sym_idx, :] =sym_point(front_dir,up_dir,vertical_normal,mesh_center, landmark_v[i,:])
+
+    igl.writeOBJ(objdir + '/01_corr_landmark_cast_sym' + '.obj', igl.eigen.MatrixXd(landmark_v.astype('float64')),
                 igl.eigen.MatrixXi(landmark_f.astype('intc')))
     break
 
@@ -178,7 +210,7 @@ for k in b.fileList:
     igl.writeOBJ(objdir + '/01_landmark_cast' + '.obj', igl.eigen.MatrixXd(landmark_cast.astype('float64')),
                 igl.eigen.MatrixXi(landmark_face.astype('intc')))
     break
-
+#之前通过聚类块方式来求主方向的方法，不如pca
     select_normal =[]
     select_idx =[]
     select_vertex=[]

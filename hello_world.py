@@ -33,7 +33,26 @@ if __name__ == '__main__':
     print ""
 
     # -----------------------------------------------------------------------------
+    '''
+    safe_mkdir('./output/iterate/')
+    value =np.array([-10,-8,-6,-4,-2,0,2,4,6,8,10])
+    for i in range(0,1):
+        for j in range (value.size):
+            model.betas[:] = 0
+            model.betas[i] = value[j]
+            outmesh_path = './output/iterate/'+'pose_'+str(i)+'='+str(value[j])+'.obj'
+            write_simple_obj(mesh_v=model.r, mesh_f=model.f, filepath=outmesh_path)
+    '''
+    safe_mkdir('./output/iterate_expression/')
+    value =np.array([-4,-2,2,4])
+    for i in range(300,320):
+        for j in range (value.size):
+            model.betas[:] = 0
+            model.betas[i] = value[j]
+            outmesh_path = './output/iterate_expression/'+'express_'+str(i)+'='+str(value[j])+'.obj'
+            write_simple_obj(mesh_v=model.r, mesh_f=model.f, filepath=outmesh_path)
 
+    '''
     # Assign random pose and shape parameters
     model.pose[:]  = np.random.randn( model.pose.size ) * 0.05
     model.betas[:] = np.random.randn( model.betas.size ) * 1.0
@@ -47,4 +66,4 @@ if __name__ == '__main__':
 
     # Print message
     print 'output mesh saved to: ', outmesh_path 
-
+    '''

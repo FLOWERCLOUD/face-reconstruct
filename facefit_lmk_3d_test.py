@@ -10,8 +10,8 @@ from os.path import join
 
 from smpl_webuser.serialization import load_model
 from fitting.landmarks import load_embedding, landmark_error_3d
-from fitting.util import load_binary_pickle, write_simple_obj, safe_mkdir, mat_save,IglMatrixTonpArray,read_int
-from facefit_lmk2d_strategy_2 import fit_lmk3d
+from fitting.util import load_binary_pickle, write_simple_obj, safe_mkdir, mat_save,IglMatrixTonpArray
+from facefit_lmk2d_strategy_3 import fit_lmk3d
 import scipy.io as sio
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
@@ -29,7 +29,7 @@ import pyigl as igl
 
 # -----------------------------------------------------------------------------
 
-def run_fitting(inputdir,outpudir):
+def run_fitting():
     # input landmarks
     '''
     lmk_path = './data/landmark_3d.pkl'
@@ -51,7 +51,7 @@ def run_fitting(inputdir,outpudir):
     plt.show()
     '''
     # model
-    model_path = './models/male_model.pkl'  # change to 'female_model.pkl' or 'generic_model.pkl', if needed
+    model_path = './models/generic_model.pkl'  # change to 'female_model.pkl' or 'generic_model.pkl', if needed
     model = load_model(
         model_path)  # the loaded model object is a 'chumpy' object, check https://github.com/mattloper/chumpy for details
     print "loaded model from:", model_path
@@ -59,10 +59,10 @@ def run_fitting(inputdir,outpudir):
     # landmark embedding
     lmk_emb_path = './data/lmk_embedding_intraface_to_flame.pkl'
     lmk_face_idx, lmk_b_coords = load_embedding(lmk_emb_path)
-#    lmk_v = igl.eigen.MatrixXd()
-#    lmk_f =igl.eigen.MatrixXi()
-#    igl.readOBJ('C:/Users/hehua2015/Pictures/niutou/seg/maya_6.obj',lmk_v,lmk_f)
-#    lmk_v = IglMatrixTonpArray(lmk_v)
+    lmk_v = igl.eigen.MatrixXd()
+    lmk_f =igl.eigen.MatrixXi()
+    igl.readOBJ('C:/Users/hehua2015/Pictures/niutou/seg/maya_6.obj',lmk_v,lmk_f)
+    lmk_v = IglMatrixTonpArray(lmk_v)
 #    mat_save({'lmk_face_idx': lmk_face_idx}, 'lmk_face_idx.mat')
 #    mat_save({'lmk_b_coord': lmk_b_coords}, 'lmk_b_coords.mat')
 #    print "loaded lmk embedding"
@@ -78,8 +78,8 @@ def run_fitting(inputdir,outpudir):
               ])
     #逆时针 ，前到后
     body_select_lmk = np.array([3277,3240,3222,3341])
-#    target_face_lmk_v = lmk_v[face_select_lmk,:]
-#    target_body_lmk_v = lmk_v[body_select_lmk,:]
+    target_face_lmk_v = lmk_v[face_select_lmk,0:2]
+    target_body_lmk_v = lmk_v[body_select_lmk,0:2]
     # output
     output_dir = './output'
     safe_mkdir(output_dir)
@@ -89,7 +89,7 @@ def run_fitting(inputdir,outpudir):
     weights['lmk'] = 1.0
     weights['shape'] = 0.001
     weights['expr'] = 0.001
-    weights['pose'] = 0.01
+    weights['pose'] = 0.1
 
     # optimization options
     import scipy.sparse as sp
@@ -100,11 +100,11 @@ def run_fitting(inputdir,outpudir):
     opt_options['maxiter'] = 10
     sparse_solver = lambda A, x: sp.linalg.cg(A, x, maxiter=opt_options['maxiter'])[0]
     opt_options['sparse_solver'] = sparse_solver
-#    target_lmk_v = np.concatenate((target_face_lmk_v,target_body_lmk_v))
+    target_lmk_v = np.concatenate((target_face_lmk_v,target_body_lmk_v))
 
     landmark_v = igl.eigen.MatrixXd()
     landmark_f = igl.eigen.MatrixXi()
-    igl.readOBJ(inputdir + '/01_corr_landmark_step1' + '.obj', landmark_v,
+    igl.readOBJ('L:/yuanqing/imgs/imgs/vrn_result/niutou/01' + '/01_corr_landmark_cast_sym' + '.obj', landmark_v,
                 landmark_f)
     landmark_v = np.array(landmark_v)
     landmark_body = np.array([[586,336,130],[562,369,150],[709,295,160],[727,262,150]])
@@ -113,43 +113,26 @@ def run_fitting(inputdir,outpudir):
 #    igl.writeOBJ('L:/yuanqing/imgs/imgs/vrn_result/niutou/01' + '/01_landmark_body_plane' + '.obj', igl.eigen.MatrixXd(landmark_body.astype('float64')),
 #                igl.eigen.MatrixXi(landmark_body_f.astype('intc')))
 
-    target_lmk_v = np.concatenate((landmark_v[:,0:3], landmark_body[:,0:3]))  # 三维landmark点
+    target_lmk_v = np.concatenate((landmark_v[:,:], landmark_body[:,:]))
 
-    vrn_vtx = igl.eigen.MatrixXd()
-    vrn_f = igl.eigen.MatrixXi()
-    igl.readOBJ(inputdir + '/Target_corr' + '.obj', vrn_vtx,
-                vrn_f)
-
-    frame_front_mask = read_int('D:/mprojects/flame-fitting' + '/face_front_mask.txt')
-    import fitting.global_var as global_var
-    global_var.vrn_vtx_np = np.array(vrn_vtx)
-    global_var.frame_front_mask = frame_front_mask[:,0]
-
-
-
-    output_dir = outpudir
         # run fitting
     mesh_v, mesh_f, parms = fit_lmk3d(lmk_3d=target_lmk_v,  # input landmark 3d
                                       model=model,  # model
                                       mesh_faces=model.f,
-                                      lmk_facevtx_idx=face_select_lmk, lmk_bodyvtx_idx=body_select_lmk,  # landmark embedding
                                       lmk_face_idx=lmk_face_idx,
                                       lmk_b_coords=lmk_b_coords,
+                                      lmk_facevtx_idx=face_select_lmk, lmk_bodyvtx_idx=body_select_lmk,  # landmark embedding
                                       weights=weights,  # weights for the objectives
-                                      shape_num=300, expr_num=100, opt_options=opt_options,
-                                      output_dir=output_dir)  # options
+                                      shape_num=300, expr_num=100, opt_options=opt_options)  # options
     #    vp.trisurf(align_v, align_f, rendertype='wireframe')
     #    vp.scatter(pts=lmk_3d,alpha=1,mode='sphere',scale=0.001)
     # vp.trisurf(v_final, f_final, rendertype='wireframe', color3f=(0,0,0), alpha=0.3)
     #    vp.show()
     # write result
-
-    output_path = join(output_dir, 'fit_lmk2d_result_01.obj')
+    output_dir = 'L:/yuanqing/imgs/imgs/vrn_result/niutou/01/'
+    output_path = join(output_dir, 'fit_lmk3d_result_01.obj')
     write_simple_obj(mesh_v=mesh_v, mesh_f=mesh_f, filepath=output_path, verbose=False)
     return
-
-
-
     vp.trisurf(mesh_v, mesh_f, rendertype='wireframe')
     vp.scatter(pts=target_lmk_v, alpha=1, mode='sphere', scale=0.001)
     # vp.trisurf(v_final, f_final, rendertype='wireframe', color3f=(0,0,0), alpha=0.3)
@@ -160,6 +143,5 @@ def run_fitting(inputdir,outpudir):
 # -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    run_fitting(inputdir='L:/yuanqing/imgs/imgs/vrn_result/niutou/15/'
-                ,outpudir='L:/yuanqing/imgs/imgs/vrn_result/niutou/15/align/')
+    run_fitting()
 
