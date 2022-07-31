@@ -1,5 +1,5 @@
 *.pyc
-models/
+models/*.zip
 __pycache__
 bayesian_matting_master/__pycache__
 uv_mapping
@@ -9,3 +9,8 @@ landmark_embedding_squence_openmouse
 landmark_embedding_squence
 embree_hit_normal.obj
 embree_hit.obj
+.idea
+.idea/encodings.xml
+.idea/flame-fitting.iml
+.idea/workspace.xml
+.idea/encodings.xml
