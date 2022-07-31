@@ -1,5 +1,5 @@
 *.pyc
-models/
+models/*.zip
 __pycache__
 bayesian_matting_master/__pycache__
 uv_mapping

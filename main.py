@@ -56,7 +56,7 @@ def build_hair(img_dir, landmark_dir=None, skipfilename_list=None):
     """
     生成头发，目录应包含分割图，头发走向
     :param img_dir: 项目地址，每个子文件夹包含图片和包含特征点
-    :param landmark_dir: 
+    :param landmark_dir:
     :param skipfilename_list:
     :return:
     """
@@ -103,12 +103,18 @@ def build_hair(img_dir, landmark_dir=None, skipfilename_list=None):
 
 
 def testcase1():
+    """ 执行这个前，已生成人脸特征点
+    :return:
+    """
     gender_map = {"06010": "male", "06018": "male", "06021": "female", "06076": "male", "06132": "female",
                   "06206": "female"}
     generate_shape("E:/workspace/vrn_data/avata-testdata/", gender_map=gender_map)
 
 
 def testcase2():
+    """ 执行这个之前，已生成图片分割图
+    :return:
+    """
     build_hair("img_dir")
 
 
