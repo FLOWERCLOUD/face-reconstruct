@@ -4,11 +4,11 @@ import numpy as np
 import cPickle as pickle
 import scipy.io as scio
 import sys
-sys.path.insert(0, "D:/mprojects/libiglfull/libigl/python/build/x64/Release")
+sys.path.insert(0, "E:/workspace/igl_python/")
 import pyigl as igl
 from fitting.util import write_full_obj,mat_load,readVertexColor
 from triangle_raster import  FP_COLOR_TO_TEXTURE,MetroMesh
-from fitting.util import load_binary_pickle, save_binary_pickle
+from fitting.util import load_binary_pickle, save_binary_pickle,read_igl_obj
 import cv2
 
 '''
@@ -45,7 +45,7 @@ def conver_mean_tex(para_objmesh, paraTexMat,outputdir):
     output_path = outputdir + 'mean_tex' + '.obj'
     write_full_obj(v, f, n, n_f, t, t_f, cur_tex, output_path)
 
-def convert_para_tex(para_objmesh, paraTexMat,outputdir,ev_std=5):
+def convert_para_tex(para_objmesh, paraTexMat,outputdir,ev_std=1):
 
     v = igl.eigen.MatrixXd()
     f = igl.eigen.MatrixXi()
@@ -76,11 +76,12 @@ def convert_para_tex(para_objmesh, paraTexMat,outputdir,ev_std=5):
             coff.reshape(coff.size,1)
             cur_tex = texMU+np.dot(texPC,coff)
             for i in range(0,cur_tex.size):
-                if cur_tex[i]<0.0:
-                    cur_tex[i] =0.0
-                if cur_tex[i] > 255.0:
-                    cur_tex[i] = 255.0
-                cur_tex[i]/=255.0
+                pass
+                # if cur_tex[i]<0.0:
+                #     cur_tex[i] =0.0
+                # if cur_tex[i] > 255.0:
+                #     cur_tex[i] = 255.0
+                # cur_tex[i]/=255.0
             cur_tex = cur_tex.reshape(cur_tex.size/3,3)
             if plus:
                 output_path = outputdir + 'pc_' + str(i_pc).zfill(3) + 'std_'+str(ev_std) + '+'+'.obj'
@@ -89,7 +90,7 @@ def convert_para_tex(para_objmesh, paraTexMat,outputdir,ev_std=5):
             write_full_obj(v,f,n,n_f,t,t_f,cur_tex,output_path)
 
         dir(True)
-        dir(False)
+        #dir(False)
 
 def generate_frame_para_tex(obj_path,outfile):
     V_igl = igl.eigen.MatrixXd()
@@ -150,8 +151,8 @@ def build_para_tex_pc(img_path,paraTexMat,outpudir):
     ev_std = 5
     tx_pc = np.zeros((1,mean_img.shape[0],mean_img.shape[1],3))
     for i_pc in range(0, 1):
-        'pc_' + str(i_pc).zfill(3) + 'std_' + str(ev_std) + '+' + '.png'
-        pc_img = cv2.imread(meanimagepath, cv2.IMREAD_COLOR)
+        pc_img_path = img_path+'pc_' + str(i_pc).zfill(3) + 'std_' + str(ev_std) + '+' + '.png'
+        pc_img = cv2.imread(pc_img_path, cv2.IMREAD_COLOR)
         c_pc = (pc_img[:,:,:]-mean_img[:,:,:])/ev_std
         tx_pc[i_pc,:,:,:]= c_pc[:,:,:]
     contact = mat_load(paraTexMat)
@@ -161,7 +162,119 @@ def build_para_tex_pc(img_path,paraTexMat,outpudir):
     data = {'texPC':tx_pc,'texMU':mean_img,'texEV':texEV}
     save_binary_pickle(data,outpudir)
 
+def build_para_tex_pc_for_frame(img_path,paraTexMat,outpudir,
+                                frame_path ='D:\mproject/face-reconstruct/texpc/frame_template_retex.obj'):
+    meanimagepath = img_path+'mean_tex_color.png'
+    mean_img = cv2.imread(meanimagepath,cv2.IMREAD_COLOR )
+    ev_std = 5
 
+    v, f, t, t_f, n, n_f = read_igl_obj(frame_path)
+    if f.shape[0] != t_f.shape[0]:
+        print 'not have same face num'
+    tx_pc = np.zeros((199, v.shape[0], 3))
+    v_tx_map = {}
+    for i in range(0,f.shape[0]):
+        for j in range(0,3):
+            v_f_id = f[i,j]
+            t_f_id = t_f[i,j]
+            v_tx_map[v_f_id] = t_f_id
+    for i_pc in range(0, 199): #199
+
+        pc_img_path = img_path+'pc_' + str(i_pc).zfill(3) + 'std_' + str(ev_std) + '+' + '.png'
+        pc_img = cv2.imread(pc_img_path, cv2.IMREAD_COLOR)
+        c_pc = (pc_img[:,:,:]-mean_img[:,:,:])/float(ev_std)
+#        cv2.imwrite(img_path+'/convet_tex.jpg',pc_img)
+        height = pc_img.shape[0]
+        width = pc_img.shape[1]
+        v_colors =[]
+        for i in range(0,v.shape[0]):
+            tx_id = v_tx_map[i]
+            x,y = t[tx_id,:]
+            img_y = int(height-1 - (height-1)*y)
+            img_x = int((width-1)*x)
+            c_color = c_pc[ img_y,img_x,:]
+            if img_x <0 or img_x > width-1 or img_y <0 or img_y > height-1:
+                print  img_y,img_x
+            if c_color[0] > 255 or c_color[0] < 0 or c_color[1] > 255 or c_color[1] < 0 or  c_color[2] > 255 or c_color[2] < 0 :
+                print c_color
+            v_colors.append(c_color)
+        v_colors = np.array(v_colors)
+        v_colors = v_colors[:,::-1]
+        tx_pc[i_pc, :, :] = v_colors
+        # write_full_obj(v, f, np.array([]), np.array([]), np.array([]), np.array([]), v_colors,
+        #                outpudir+'/vcolor_frame.obj')
+    # mean color
+    mean_colors = []
+    for i in range(0, v.shape[0]):
+        tx_id = v_tx_map[i]
+        x, y = t[tx_id, :]
+        img_y = int(height - 1 - (height - 1) * y)
+        img_x = int((width - 1) * x)
+        c_color = mean_img[img_y, img_x, :]
+        if img_x < 0 or img_x > width - 1 or img_y < 0 or img_y > height - 1:
+            print  img_y, img_x
+        if c_color[0] > 255 or c_color[0] < 0 or c_color[1] > 255 or c_color[1] < 0 or c_color[2] > 255 or c_color[
+            2] < 0:
+            print c_color
+        mean_colors.append(c_color)
+    mean_colors = np.array(mean_colors)
+    mean_colors = mean_colors[:,::-1]
+
+    contact = mat_load(paraTexMat)
+    target = contact['paraTex']
+    texEV = target['texEV'][0, 0]
+    texEV = np.array(texEV)
+    data = {'texPC':tx_pc,'texMU':mean_colors,'texEV':texEV}
+    save_binary_pickle(data,outpudir+'frame_tex.pkl')
+
+def build_para_tex_pc_for_frame_new(img_path,paraTexMat,outpudir,
+                                frame_path ='D:\mproject/face-reconstruct/texpc/frame_template_retex.obj'):
+    meanimagepath = img_path+'mean_tex_color.png'
+    mean_img = cv2.imread(meanimagepath,cv2.IMREAD_COLOR )
+    ev_std = 5
+
+    v, f, t, t_f, n, n_f = read_igl_obj(frame_path)
+    if f.shape[0] != t_f.shape[0]:
+        print 'not have same face num'
+    tx_pc = np.zeros((199, v.shape[0], 3))
+    v_tx_map = {}
+    for i in range(0,f.shape[0]):
+        for j in range(0,3):
+            v_f_id = f[i,j]
+            t_f_id = t_f[i,j]
+            v_tx_map[v_f_id] = t_f_id
+    for i_pc in range(0, 199): #199
+
+        pc_img_path = img_path+'pc_' + str(i_pc).zfill(3) + 'std_' + str(ev_std) + '+' + '.png'
+        pc_img = cv2.imread(pc_img_path, cv2.IMREAD_COLOR)
+
+    #        cv2.imwrite(img_path+'/convet_tex.jpg',pc_img)
+        height = pc_img.shape[0]
+        width = pc_img.shape[1]
+        v_colors =[]
+        for i in range(0,v.shape[0]):
+            tx_id = v_tx_map[i]
+            x,y = t[tx_id,:]
+            img_y = int(height-1 - (height-1)*y)
+            img_x = int((width-1)*x)
+            c_color = pc_img[ img_y,img_x,:]
+            if img_x <0 or img_x > width-1 or img_y <0 or img_y > height-1:
+                print  img_y,img_x
+            if c_color[0] > 255 or c_color[0] < 0 or c_color[1] > 255 or c_color[1] < 0 or  c_color[2] > 255 or c_color[2] < 0 :
+                print c_color
+            v_colors.append(c_color)
+        v_colors = np.array(v_colors)
+        v_colors = v_colors[:,::-1]
+        tx_pc[i_pc, :, :] = v_colors
+        write_full_obj(v, f, np.array([]), np.array([]), np.array([]), np.array([]), v_colors,
+                        outpudir+'/vcolor_frame+'+str(i_pc)+'.obj')
+    # mean color
+    contact = mat_load(paraTexMat)
+    target = contact['paraTex']
+    texEV = target['texEV'][0, 0]
+    texEV = np.array(texEV)
+    data = {'texPC':tx_pc,'texEV':texEV}
+    save_binary_pickle(data,outpudir+'frame_tex_nomean.pkl')
 
 def read_mask(mask_image_path,whiteIsMask = True):
     img = cv2.imread(mask_image_path,cv2.IMREAD_GRAYSCALE )
@@ -188,9 +301,9 @@ def convert2Texture(inputdir,outputdir):
         #generate_frame_para_tex(input_path, output_path)
 
 def generate_tex():
-    source_mesh = 'D:/mprojects/flame-fitting/texpc/source2.obj'
-    conver_mean_tex(source_mesh,'D:/mprojects/flame-fitting/paraTex.mat','D:/mprojects/flame-fitting/texpc/source_para/')
-    #convert_para_tex(source_mesh,'D:/mprojects/flame-fitting/paraTex.mat','D:/mprojects/flame-fitting/texpc/source_para/',ev_std=5)
+    source_mesh = 'D:/mproject/face-reconstruct/texpc/source2.obj'
+    conver_mean_tex(source_mesh,'D:/mproject/face-reconstruct/paraTex.mat','D:/mproject/face-reconstruct/texpc/source_para_new/texture/')
+    convert_para_tex(source_mesh,'D:/mproject/face-reconstruct/paraTex.mat','D:/mproject/face-reconstruct/texpc/source_para_new/',ev_std=1)
 #    mean_tex_img = cv2.imread('D:/mprojects/flame-fitting/texpc/mean_tex_color_witheye.png', cv2.IMREAD_UNCHANGED)
 #    eye_mask = read_mask('D:/mprojects/flame-fitting/texpc/eye_mask.png',whiteIsMask = False)
 
@@ -206,9 +319,9 @@ def add_texture_and_write(v_np,f_np,output_path):
 
 if __name__ == '__main__':
     #generate_tex()
-#    convert2Texture('D:/mprojects/flame-fitting/texpc/source_para/','D:/mprojects/flame-fitting/texpc/source_para/texture/')
+    #convert2Texture('D:\mproject/face-reconstruct/texpc/source_para/','D:\mproject/face-reconstruct/texpc/source_para/texture/')
     #generate_para_frame_obj('D:/mprojects/flame-fitting/texpc/frame_template_witheye.obj',
     #                        'D:/mprojects/flame-fitting/texpc/target_para/')
-    build_para_tex_pc('D:/mprojects/flame-fitting/texpc/source_para/texture/', 'D:/mprojects/flame-fitting/paraTex.mat',
-                     'D:/mprojects/flame-fitting/texpc/target_para/frame_tex.pkl')
+    build_para_tex_pc_for_frame_new('D:\mproject/face-reconstruct/texpc/source_para/texture/', 'D:\mproject/face-reconstruct/paraTex.mat',
+                     'D:\mproject/face-reconstruct/texpc/target_para/targer_para_new/')
     pass

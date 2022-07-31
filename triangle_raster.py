@@ -43,6 +43,17 @@ class BBox3f:
             self.max[1] = max(t1)
             self.max[2] = max(t2)
 
+class BBoxi_2d:
+    def __init__(self, v_array=np.array([])):
+        self.min = np.array([100000.0, 100000.0,100000.0])
+        self.max = np.array([-100000.0, -100000.0,-100000.0])
+        if v_array.size >0:
+            t0 = v_array[:,0]
+            t1 = v_array[:,1]
+            self.min[0] = min(t0)
+            self.min[1] = min(t1)
+            self.max[0] = max(t0)
+            self.max[1] = max(t1)
 
 class BBoxi:
     def __init__(self,v0=np.array([]),v1=np.array([]),v2=np.array([])):

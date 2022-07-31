@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0, "D:/mprojects/pyembree/pyembree")
+sys.path.insert(0, "D:/mproject/pyembree-master/pyembree/")
 import sys
 import time
 

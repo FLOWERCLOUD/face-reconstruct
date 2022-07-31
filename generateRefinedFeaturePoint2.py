@@ -90,7 +90,7 @@ for k in b.fileList:
     vtx_color = result['FaceVertexCData'][0, 0]
     vtx_color = vtx_color/255.0
     F = F-1
-    V[:,1] = 192-V[:,1]  #以左下角为原点
+    V[:,1] = 192-1-V[:,1]  #以左下角为原点
     V_igl = igl.eigen.MatrixXd(V.astype('float64'))
     F_igl = igl.eigen.MatrixXi(F.astype('intc'))
 

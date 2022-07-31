@@ -134,8 +134,10 @@ class Clustert2:
 
 from sklearn.cluster import spectral_clustering
 from  scipy.sparse import coo_matrix,dok_matrix
+from scipy.cluster.vq import vq,kmeans,whiten
 import scipy
-from strand_convert import read_bin
+from strand_convert import read_bin,convert_batch_with_label
+from fitting.util import write_full_obj,safe_mkdirs
 class Strand_cluster:
 
     def __init__(self):
@@ -179,6 +181,27 @@ class Strand_cluster:
 
         all_dis = stranLen_dis+root_dis+p2p_dis+gradient_dis+laplcian_dis
         return all_dis
+    def get_strand_feature_vec(self,strand):
+        strand = np.array(strand)
+        strand1_root = strand[0]
+        strand1_end = strand[strand.shape[0]-1]
+        strand1_len = 0.0
+        for i in range(0,len(strand)-1):
+            tangent = strand[i + 1] - strand[i]
+            strand1_len+=np.linalg.norm(tangent)
+        sample_num = strand.shape[0]
+        average_tangernt = np.array([0.0,0.0,0.0])
+        for i in range(0,sample_num-1):
+            tangent1 = strand[i + 1,:] - strand[i,:]
+            tangent1 /= np.linalg.norm(tangent1)
+            average_tangernt+=tangent1
+        if sample_num>1:
+            average_tangernt = average_tangernt/(sample_num-1)
+        else:
+            pass
+        #all_feature = np.hstack((strand1_root,strand1_end,average_tangernt,strand1_len))
+        all_feature = np.hstack((strand1_root,np.array(strand1_len)))
+        return all_feature
 
     def construct_affinite_matrix(self,result):
         strand_num = len(result)
@@ -209,9 +232,14 @@ class Strand_cluster:
         return  feature_matrix
 
 
-    def run(self,prj_dir,file_name):
-
-        result = read_bin(prj_dir + file_name + '.data')
+    def run(self,prj_dir,file_name,cluster_num =500):
+        import os
+        print prj_dir + file_name + '.data'
+        if os.path.exists(prj_dir + file_name + '.data'):
+            result = read_bin(prj_dir + file_name + '.data')
+        else:
+            print prj_dir + file_name + '.data','not exist'
+            return
         #筛选出长度太小的
         select_strand_id =[]
         select_strand = []
@@ -227,17 +255,49 @@ class Strand_cluster:
         #sc = spectral_clustering( n_clusters=10)
         #sc.fit(featrue_vec)
         # print sc.labels_
-        strand_graph = self.construct_affinite_matrix(select_strand)
-        print 'construct sucess'
-        label = spectral_clustering(strand_graph,n_clusters=10)
-        print label
+        if 0:
+            strand_graph = self.construct_affinite_matrix(select_strand)
+            print 'construct sucess'
+            label = spectral_clustering(strand_graph,n_clusters=10)
+            print label
+        if 1:
+
+            strand_num = len(select_strand)
+            feature_vecs =[]
+            for i in range(0, strand_num):
+                feature_vec = self.get_strand_feature_vec(select_strand[i])
+                feature_vecs.append(feature_vec)
+                #print feature_vec
+            feature_vecs = np.array(feature_vecs)
+            #data = whiten(feature_vecs)
+            data = feature_vecs
+
+            centroid = kmeans(data,cluster_num)[0]
+            label = vq(data,centroid)[0]
+            num = np.zeros(cluster_num)
+            for i in label:
+                num[i]+=1
+            print  num
+            strand_num =100
+            select_strand = np.array(select_strand)
+            v, f, n, nf, vt, vt_f,mesh_v_color = convert_batch_with_label(select_strand, label,cluster_num,num=strand_num,if_fix_dir = True)
+            safe_mkdirs(prj_dir +'/convert_hair_cluster'+ '/convert_hair_cluster_'+str(cluster_num).zfill(5)+'_'+str(strand_num).zfill(5))
+            write_full_obj(v, f, n, nf, vt, vt_f, mesh_v_color,
+                           prj_dir + '/convert_hair_cluster' + '/convert_hair_cluster_'+str(cluster_num).zfill(5)+'_'+str(strand_num).zfill(5)+'/' + file_name + '_' + str(strand_num).zfill(5) +'_cluster_num_'+str(cluster_num).zfill(5)+ '.obj',
+                           generate_mtl=True,
+                           verbose=False, img_name='hair_06_Hair_Diffuse_Opacity.png')
 
 
-#c1 = Clustert1()
-#c1.run()
-#c2 = Clustert2()
-#c2.run()
-prj_dir = 'G:/yuanqing/faceproject/hairstyles/hairstyles/hair/'
-sc = Strand_cluster()
-sc.run(prj_dir,'strands00002')
+if __name__ == '__main__':
+    #c1 = Clustert1()
+    #c1.run()
+    #c2 = Clustert2()
+    #c2.run()
+    prj_dir = 'E:\workspace\dataset\hairstyles\hair/'
+    sc = Strand_cluster()
+    #sc.run(prj_dir,'strands00002',50)
+    for i in range(1,600):
+        filename ='strands'+str(i).zfill(5)
+        sc.run(prj_dir,filename,500)
+
 

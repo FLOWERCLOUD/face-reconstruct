@@ -10,7 +10,7 @@ from os.path import join
 
 from smpl_webuser.serialization import load_model
 from fitting.landmarks import load_embedding, landmark_error_3d
-from fitting.util import load_binary_pickle, write_simple_obj, safe_mkdir, mat_save,IglMatrixTonpArray,read_int
+from fitting.util import load_binary_pickle, write_simple_obj, safe_mkdirs, mat_save,IglMatrixTonpArray,read_int
 from facefit_lmk2d_strategy_2 import fit_lmk3d
 import scipy.io as sio
 from mpl_toolkits.mplot3d import Axes3D
@@ -66,6 +66,7 @@ def run_fitting(inputdir,outpudir):
 #    mat_save({'lmk_face_idx': lmk_face_idx}, 'lmk_face_idx.mat')
 #    mat_save({'lmk_b_coord': lmk_b_coords}, 'lmk_b_coords.mat')
 #    print "loaded lmk embedding"
+    #68 个 landmark
     face_select_lmk = np.array([2210,1963,3486,3382,3385,3389,3392,3396,3400,3599,3594,3587,3581,3578,3757,568,728,
               3764, 3158, 335, 3705, 2178,
               673, 3863, 16, 2139, 3893,
@@ -82,7 +83,7 @@ def run_fitting(inputdir,outpudir):
 #    target_body_lmk_v = lmk_v[body_select_lmk,:]
     # output
     output_dir = './output'
-    safe_mkdir(output_dir)
+    safe_mkdirs(output_dir)
 
     # weights
     weights = {}
