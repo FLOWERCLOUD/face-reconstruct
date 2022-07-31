@@ -127,7 +127,7 @@ def fit_lmk3d( lmk_3d,                      # input landmark 3d
 def run_fitting():
 
     # input landmarks
-    lmk_path = './data/landmark_3d.pkl'
+    lmk_path = '../data/landmark_3d.pkl'
     lmk_3d = load_binary_pickle( lmk_path )
 
     q1 = quaternion.from_rotation_vector([0,0,0])
@@ -151,15 +151,15 @@ def run_fitting():
     print "loaded model from:", model_path
 
     # landmark embedding
-    lmk_emb_path = './data/lmk_embedding_intraface_to_flame.pkl' 
+    lmk_emb_path = '../data/lmk_embedding_intraface_to_flame.pkl'
     lmk_face_idx, lmk_b_coords = load_embedding( lmk_emb_path )
 
-    mat_save({'lmk_face_idx':lmk_face_idx},'lmk_face_idx.mat')
-    mat_save({'lmk_b_coord':lmk_b_coords}, 'lmk_b_coords.mat')
+    mat_save({'lmk_face_idx':lmk_face_idx}, '../lmk_face_idx.mat')
+    mat_save({'lmk_b_coord':lmk_b_coords}, '../lmk_b_coords.mat')
     print "loaded lmk embedding"
 
     # output
-    output_dir = './output'
+    output_dir = '../output'
     safe_mkdir( output_dir )
 
     # weights

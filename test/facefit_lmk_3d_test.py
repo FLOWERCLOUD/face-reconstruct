@@ -57,7 +57,7 @@ def run_fitting():
     print "loaded model from:", model_path
 
     # landmark embedding
-    lmk_emb_path = './data/lmk_embedding_intraface_to_flame.pkl'
+    lmk_emb_path = '../data/lmk_embedding_intraface_to_flame.pkl'
     lmk_face_idx, lmk_b_coords = load_embedding(lmk_emb_path)
     lmk_v = igl.eigen.MatrixXd()
     lmk_f =igl.eigen.MatrixXi()
@@ -81,7 +81,7 @@ def run_fitting():
     target_face_lmk_v = lmk_v[face_select_lmk,0:2]
     target_body_lmk_v = lmk_v[body_select_lmk,0:2]
     # output
-    output_dir = './output'
+    output_dir = '../output'
     safe_mkdir(output_dir)
 
     # weights

@@ -7,7 +7,7 @@ from fitting.landmarks import load_embedding
 from smpl_webuser.serialization import load_model
 import numpy as np
 # landmark embedding
-lmk_emb_path = './data/lmk_embedding_intraface_to_flame.pkl'
+lmk_emb_path = '../data/lmk_embedding_intraface_to_flame.pkl'
 lmk_face_idx, lmk_b_coords = load_embedding(lmk_emb_path)
 model_path = './models/female_model.pkl'  # change to 'female_model.pkl' or 'generic_model.pkl', if needed
 model = load_model(

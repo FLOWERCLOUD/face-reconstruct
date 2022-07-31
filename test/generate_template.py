@@ -43,7 +43,7 @@ if __name__ == '__main__':
     model.trans[:] =np.array([0, 0, 0])
 
     # Write to an .obj file
-    outmesh_dir = './output'
+    outmesh_dir = '../output'
     safe_mkdir( outmesh_dir )
     outmesh_path = join( outmesh_dir, 'male_template.obj' )
     #outmesh_path = join(outmesh_dir, 'template.obj')
