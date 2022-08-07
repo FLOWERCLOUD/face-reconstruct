@@ -1227,14 +1227,24 @@ def test_scale_bbox():
     cv2.imwrite(out_put_dir + 'A1301043678290A_2.png', scaled_img[::-1, :, :])
 
 
-def get_similar_hair_from_database_wraper(input_seg_img, input_dir_img, seg_database_path, seg_database_input_dir,
-                                          direction_database_dir, out_put_dir):
-    hair_seg_dir_path = direction_database_dir
+def get_similar_hair_from_database_wrapper(input_seg_img, input_dir_img, seg_database_path, seg_database_input_dir,
+                                           hair_seg_dir_path, out_put_dir):
+    """
+
+    :param input_seg_img:
+    :param input_dir_img:
+    :param seg_database_path:
+    :param seg_database_input_dir:
+    :param hair_seg_dir_path:
+    :param out_put_dir:
+    :return:
+    """
+    import cv2
     bin_map = {}
     img = input_seg_img
     y_scale_up = 4.0
     y_scale_down = 20.0
-
+    # 统计当前分割图的特征向量
     seg_img, theata_bin = caculate_hair_seg_bin(img, [(img.shape[1] - 1) / 2.0,
                                                       (img.shape[0] - 1) / (1 + y_scale_down / y_scale_up)])
 
@@ -1254,8 +1264,8 @@ def get_similar_hair_from_database_wraper(input_seg_img, input_dir_img, seg_data
     # print EMD_1D([1, 2, 3, 5], [4, 8, 12, 20])
     img_source = input_dir_img
     img_source = img_source.astype(np.float)
-    import cv2
-    weight_c = 0.5
+
+    weight_c = 0.1  # 越小，则分割图形状占比越高
     for key, value in hairs_seg_bin.items():
         # print key, 'corresponds to', value
         if use_emd:
@@ -1266,18 +1276,18 @@ def get_similar_hair_from_database_wraper(input_seg_img, input_dir_img, seg_data
         img_seg = cv2.imread(k, cv2.IMREAD_COLOR)
         img_seg = img_seg.astype(np.float)
         dis1 = dir_seg_distance(img_source, img_seg)
-        print  distance1, dis1
+        print ("分割距离%s,方向距离%s" % (distance1, dis1))
         emd1 = EMD_DIS(distance1 + weight_c * dis1, key, False, use_emd)
         emd_array.append(emd1)
         if use_emd:
             distance2 = EMD_1D(source_bin.tolist(), value[::-1].tolist())
         else:
             distance2 = np.linalg.norm(source_bin - value[::-1])
-        dis2 = dir_seg_distance(img_source, img_seg[:, ::-1, :])
-        print  distance2, dis2
+        dis2 = dir_seg_distance(img_source, img_seg[:, ::-1, :])  # 反向距离
+        print ("分割距离%s,反向方向距离%s" % (distance2, dis2))
         emd2 = EMD_DIS(distance2 + weight_c * dis2, key, True, use_emd)
         emd_array.append(emd2)
-    emd_array.sort()
+    emd_array.sort()  # 从小到大
     safe_mkdirs(out_put_dir + '/')
 
     # 计算方向间距离
@@ -1357,7 +1367,7 @@ def get_similar_hair_from_database_wraper(input_seg_img, input_dir_img, seg_data
             dis = dir_seg_distance(img_source, diretion_img)
             if dis < min_dis:
                 min_dis_corr_idx = i
-    print min_dis_corr_idx
+    print("距离最小的序号:%s" % min_dis_corr_idx)
     direction_img_path = direction_database_dir + '/' + emd_array[min_dis_corr_idx].name + '.png'
     diretion_img = cv2.imread(direction_img_path, cv2.IMREAD_COLOR)
     safe_mkdirs(
@@ -1424,9 +1434,9 @@ def get_similar_hair_from_database(input_seg_img, input_dir_img, out_put_dir):
     :return:
     """
     from configs.config import seg_database_path, seg_database_input_dir, direction_database_dir
-    emd_array = get_similar_hair_from_database_wraper(
+    emd_array = get_similar_hair_from_database_wrapper(
         input_seg_img=input_seg_img, input_dir_img=input_dir_img, seg_database_path=seg_database_path,
-        seg_database_input_dir=seg_database_input_dir, direction_database_dir=direction_database_dir,
+        seg_database_input_dir=seg_database_input_dir, hair_seg_dir_path=direction_database_dir,
         out_put_dir=out_put_dir)
     return emd_array
 
@@ -1482,9 +1492,12 @@ def build_hair_for_img_simgle(object_name, input_ori_img_file, input_seg_img_fil
                 pass
     cv2.imwrite(out_put_dir + '/' + object_name + '_scaled.png', scaled_img[::-1, :, :])
     cv2.imwrite(out_put_dir + '/' + object_name + '_dir_scaled.png', scaled_dir_img[::-1, :, :])
+    cv2.imwrite(out_put_dir + '/' + object_name + '_ori.png', ori_img)
     input_seg_img = cv2.imread(out_put_dir + '/' + object_name + '_scaled.png', cv2.IMREAD_COLOR)
     input_dir_img = cv2.imread(out_put_dir + '/' + object_name + '_dir_scaled.png', cv2.IMREAD_COLOR)
+
     # out_put_dir =''
+    # 从数据库检索
     emd_array = get_similar_hair_from_database(input_seg_img, input_dir_img, out_put_dir)
     # 根据landmark ，以及Frame 模型3d landmark点 得到 选择矩阵，放缩矩阵，平移
     # R =[]
@@ -1631,24 +1644,25 @@ def build_hair_for_img_simgle(object_name, input_ori_img_file, input_seg_img_fil
             v_color = v_color.astype(np.int32)
             merge_v, merge_f = add_vertex_faces(v_hair_transformed, f_hair, v_frame_align_to_image, f_frame_init)
             merge_color = np.vstack((v_color, v_color_caculate))
-            if 0:
+            if 0:  # 只包含头发
                 result = meshlab_python.Mesh_render_to_image_withmy_bbox(out_put_dir + '/' +
                                                                          'useemd_' + str(isuse_emd) + '_' + str(
                     i) + '_corr_' + strand_name + '_flip_' + str(flip) + 'render_to_image' + '.png',
                                                                          v_hair_transformed.tolist(), f_hair.tolist(),
                                                                          [], [], [], [], v_color.tolist(),
                                                                          int(width), int(height), bbox_list)
-            else:
+            else:  # 包含脸
                 result = meshlab_python.Mesh_render_to_image_withmy_bbox(out_put_dir + '/' +
-                                                                         'useemd_' + str(isuse_emd) + '_' + str(
+                                                                         'useemd_' + str(isuse_emd) + '_pri_' + str(
                     i) + '_corr_' + strand_name + '_flip_' + str(flip) + 'render_to_image' + '.png',
                                                                          merge_v.tolist(), merge_f.tolist(), [], [], [],
                                                                          [], merge_color.tolist(),
                                                                          int(width), int(height), bbox_list)
-                render_img = np.array(result[0])
-                z_buffer_img = np.array(result[1])
-                cv2.imwrite(out_put_dir + '/' + 'render_img.png', render_img[:, :, ::-1])
-                cv2.imwrite(out_put_dir + '/' + 'z_buffer_img.png', z_buffer_img)
+                if i == 0:
+                    render_img = np.array(result[0])
+                    z_buffer_img = np.array(result[1])
+                    cv2.imwrite(out_put_dir + '/' + 'render_img.png', render_img[:, :, ::-1])
+                    cv2.imwrite(out_put_dir + '/' + 'z_buffer_img.png', z_buffer_img)
                 # print result
 
 
