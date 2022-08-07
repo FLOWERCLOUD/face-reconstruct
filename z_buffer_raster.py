@@ -202,7 +202,7 @@ def Render(m, ps, imageWidth, imageHeight, correctSafePointsBaryCoords=True):
 
 
 def Render_withmybbox(m, ps, imageWidth, imageHeight, bbox, correctSafePointsBaryCoords=True):
-    print "Similar Triangles face sampling\n"
+    print("Similar Triangles face sampling")
     x_range = bbox.max[0] - bbox.min[0]
     y_range = bbox.max[1] - bbox.min[1]
     z_range = bbox.max[2] - bbox.min[2]

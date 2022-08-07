@@ -4,7 +4,8 @@ import numpy as np
 import cPickle as pickle
 import scipy.io as scio
 import sys
-sys.path.insert(0, "E:/workspace/igl_python/")
+from configs.config import igl_python_path
+sys.path.insert(0, igl_python_path)
 import pyigl as igl
 from fitting.util import write_full_obj,mat_load,readVertexColor
 from triangle_raster import  FP_COLOR_TO_TEXTURE,MetroMesh

@@ -56,7 +56,7 @@ def build_hair(img_dir, landmark_dir=None, skipfilename_list=None):
     """
     生成头发，目录应包含分割图，头发走向
     :param img_dir: 项目地址，每个子文件夹包含图片和包含特征点
-    :param landmark_dir:
+    :param landmark_dir: 从每个子文件夹目录的2d特征点中获取
     :param skipfilename_list:
     :return:
     """
@@ -89,8 +89,6 @@ def build_hair(img_dir, landmark_dir=None, skipfilename_list=None):
         # if file_name in skip_file:
         #     continue
         if file_name in skipfilename_list:
-            pass
-        else:
             continue
         build_hair_for_img_simgle(object_name=file_name,
                                   input_ori_img_file=img_dir + '/' + file_name + '.' + fomat_name,
@@ -115,11 +113,12 @@ def testcase2():
     """ 执行这个之前，已生成图片分割图
     :return:
     """
-    build_hair("img_dir")
+    build_hair("E:/workspace/vrn_data/avata-testdata/")
 
 
 def run():
-    testcase1()
+    # testcase1()
+    testcase2()
 
 
 if __name__ == '__main__':

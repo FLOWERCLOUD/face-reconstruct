@@ -2,7 +2,8 @@
 import scipy.io as sio
 import numpy as np
 import sys
-sys.path.insert(0, "E:/workspace/igl_python/")
+from configs.config import igl_python_path
+sys.path.insert(0, igl_python_path)
 import pyigl as igl
 from sklearn.decomposition import PCA
 from scipy import sparse

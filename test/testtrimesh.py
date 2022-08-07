@@ -4,7 +4,8 @@ import trimesh
 from fitting.util import save_landmark
 # print logged messages
 trimesh.util.attach_to_log()
-sys.path.insert(0, "D:/mprojects/libiglfull/libigl/python/build/x64/Release")
+from configs.config import igl_python_path
+sys.path.insert(0, igl_python_path)
 import pyigl as igl
 # load a mesh
 mesh = trimesh.load('L:/yuanqing/imgs/imgs/vrn_result/niutou/01/01.obj')

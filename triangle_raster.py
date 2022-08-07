@@ -682,7 +682,7 @@ def SingleFaceRaster(mesh, f, ps, v0, v1, v2, correctSafePointsBaryCoords):
 # MetroMesh & m VertexSampler &ps
 
 def Texture(m, ps, textureWidth, textureHeight, correctSafePointsBaryCoords=True):
-    print "Similar Triangles face sampling\n"
+    print ("Similar Triangles face sampling")
 
     for fi in range(0, m.face.shape[0]):
         ti = np.zeros([3, 2])
