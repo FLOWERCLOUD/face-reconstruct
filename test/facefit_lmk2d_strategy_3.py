@@ -9,7 +9,8 @@ from fitting.util import load_binary_pickle, write_simple_obj, safe_mkdir, mat_s
 import scipy.io as sio
 import quaternion
 import sys
-sys.path.insert(0, "D:/mprojects/libiglfull/libigl/python/build/x64/Release")
+from configs.config import igl_python_path
+sys.path.insert(0, igl_python_path)
 import pyigl as igl
 import scipy.sparse as sp
 

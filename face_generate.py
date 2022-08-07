@@ -2,14 +2,15 @@
 import os
 import numpy as np
 import sys
-
-sys.path.insert(0, "E:/workspace/igl_python/")
+from configs.config import igl_python_path
+sys.path.insert(0, igl_python_path)
 import pyigl as igl
 from fitting.util import safe_mkdirs, mat_save, mat_load, FileFilt, write_simple_obj
 from fitting.util import readImage, write_image_and_featurepoint, read_landmark, \
     cast2d_to3d_trimesh, scaleToOriCoodi_bottomleft, write_full_obj, detect_68_landmark_dlib, \
     read_igl_obj, save_binary_pickle, load_binary_pickle, readVertexColor, \
     get_vertex_normal, sample_color_from_img
+from configs.config import frame_template_retex_path
 
 # triangluration of 68 landmark
 landmark_face = np.array([[57, 8, 9], [57, 9, 56], [56, 9, 10], [56, 10, 55], [55, 10, 11], [55, 11, 54], [54, 11, 12],
@@ -230,9 +231,8 @@ def generate_face(vrn_object_dir, object_name, out_put_dir, project_dir,
     vertex_normal = get_vertex_normal(mesh_v, mesh_f)
     ori_image = ori_image[::-1, :, :]
     v_color = sample_color_from_img(mesh_v, vertex_normal, ori_image)
-    frame_re_texture_map = 'D:\mproject/face-reconstruct/texpc\source_para/texture/frame_template_retex.obj'
     v_frame_aligned, f_frame_aligned, t_frame_aligned, t_f_frame_aligned, n_frame_aligned, n_f_frame_aligned = read_igl_obj(
-        frame_re_texture_map)
+        frame_template_retex_path)
     write_full_obj(mesh_v, mesh_f, vertex_normal, n_f_frame_aligned, t_frame_aligned, t_f_frame_aligned, v_color,
                    out_put_dir + '/face_with_texture.obj')
 
@@ -1123,9 +1123,8 @@ def fit_lmk3d_2(target_v, target_f, target_lmk_3d_idx,  # input landmark 3d
         g_v = g_scale.r * model.r[:, :]
         g_v[:, :] = g_v[:, :] + g_trans_3d.r
         # write_simple_obj(mesh_v=g_v, mesh_f=model.f, filepath=output_path, verbose=False)
-        frame_re_texture_map = 'D:\mproject/face-reconstruct/texpc\source_para/texture/frame_template_retex.obj'
         v_frame_aligned, f_frame_aligned, t_frame_aligned, t_f_frame_aligned, n_frame_aligned, n_f_frame_aligned = read_igl_obj(
-            frame_re_texture_map)
+            frame_template_retex_path)
         write_full_obj(g_v, model.f, n_frame_aligned, n_f_frame_aligned, t_frame_aligned,
                        t_f_frame_aligned, np.array([]), output_path, generate_mtl=True, img_name='mean_tex_color.png')
         # add_texture_and_write(v_np=g_v, f_np=model.f, output_path=output_path)
@@ -1252,7 +1251,8 @@ img 只是拿它的高和宽
 
 
 def get_z_buffer(V, F, img, output_render_img, vcolor=np.array([])):
-    sys.path.insert(0, "D:/mproject/meshlab2016/meshlab/src/x64/Release/")
+    from configs.config import meshlab_python_path
+    sys.path.insert(0, meshlab_python_path)
     import meshlab_python
     height = img.shape[0]
     width = img.shape[1]
@@ -1440,7 +1440,8 @@ def test_scale_to_pncc():
     color = np.array(color)
     # write_full_obj(frame_pncc, f_frame_aligned, np.array([]), np.array([]), np.array([]), np.array([]), color,
     #               'E:\workspace\dataset\hairstyles/frame_pncc.obj')
-    sys.path.insert(0, "D:/mproject/meshlab2016/meshlab/src/x64/Release/")
+    from configs.config import meshlab_python_path
+    sys.path.insert(0, meshlab_python_path)
     input_mesh_path = 'E:/workspace/dataset/hairstyles/2d_hair/result/A13010436665609/builded_hair/frame_aligned_to_image.obj'
     input_dir = 'E:/workspace/dataset/hairstyles/2d_hair/result/A13010436665609/builded_hair/'
     seg_image_path = 'E:/workspace/dataset/hairstyles/2d_hair/result/A13010436665609/builded_hair/A13010436665609.png'
@@ -1587,9 +1588,8 @@ def fitting_frame_to_mesh_by3d_landmark(target_v, target_f, target_landmark_idx,
 
     face_result = {'mesh_v': mesh_v, 'mesh_f': mesh_f, 'parms': parms}
     output_path = out_put_dir + '/fitting_frame_face.obj'
-    frame_re_texture_map = 'D:\mproject/face-reconstruct/texpc\source_para/texture/frame_template_retex.obj'
     v_frame_aligned, f_frame_aligned, t_frame_aligned, t_f_frame_aligned, n_frame_aligned, n_f_frame_aligned = read_igl_obj(
-        frame_re_texture_map)
+        frame_template_retex_path)
     write_full_obj(mesh_v, mesh_f, n_frame_aligned, n_f_frame_aligned, t_frame_aligned, t_f_frame_aligned, np.array([]),
                    output_path, generate_mtl=True, img_name='mean_tex_color.png')
     # write_simple_obj(mesh_v=mesh_v, mesh_f=mesh_f, filepath=output_path, verbose=False)
@@ -1902,9 +1902,8 @@ def genetate_expression_single(shape_model, vrn_object_dir, object_name, project
     ori_image = ori_image[::-1, :, :]
     vertex_normal = get_vertex_normal(v_frame_align_to_image, noeye_mesh_f)
     v_color = sample_color_from_img(v_frame_align_to_image, vertex_normal, ori_image)
-    frame_re_texture_map = 'D:\mproject/face-reconstruct/texpc\source_para/texture/frame_template_retex.obj'
     v_frame_aligned, f_frame_aligned, t_frame_aligned, t_f_frame_aligned, n_frame_aligned, n_f_frame_aligned = read_igl_obj(
-        frame_re_texture_map)
+        frame_template_retex_path)
     safe_mkdirs(out_put_dir)
     write_full_obj(v_frame_align_to_image, noeye_mesh_f, vertex_normal, noeye_mesh_f, np.array([]), np.array([]),
                    v_color, out_put_dir + '/face_expression_texture.obj')
@@ -2401,11 +2400,10 @@ if __name__ == '__main__':
         # project_object = '002_1'
         # project_object = '004_1'
         project_dir = 'E:\workspace/vrn_data/paper_select1\man/' + project_object + '/'
-        frame_re_texture_map = 'D:\mproject/face-reconstruct/texpc\source_para/texture/frame_template_retex.obj'
         first_run = True
         if 0:
             v_frame_aligned, f_frame_aligned, t_frame_aligned, t_f_frame_aligned, n_frame_aligned, n_f_frame_aligned = read_igl_obj(
-                frame_re_texture_map)
+                frame_template_retex_path)
             generate_mesh, generate_mesh_f, t_generate_mesh, t_f_generate_mesh, n_generate_mesh, n_f_generate_mesh = read_igl_obj(
                 project_dir + '/generate_face/' + 'face.obj')
             generate_mesh_n = get_vertex_normal(generate_mesh, generate_mesh_f)

@@ -9,6 +9,7 @@ import math
 from math import sin, cos, atan, pi
 from time import time
 import sys
+from configs.config import direction_database_dir
 
 
 def print_para_resut(step, timer_end, timer_start):
@@ -660,7 +661,8 @@ def generate_polystrip_mesh_with_dir_color():
 def generta_segment_map():
     from z_buffer_raster import Mesh_render_to_image
     import sys
-    sys.path.insert(0, "D:/mprojects/libiglfull/libigl/python/build/x64/Release")
+    from configs.config import igl_python_path
+    sys.path.insert(0, igl_python_path)
     import pyigl as igl
     import numpy as np
     from triangle_raster import MetroMesh
@@ -695,14 +697,16 @@ def generta_segment_map():
 def generta_segment_map_batch(output_name, use_vertex_color=False):
     from z_buffer_raster import Mesh_render_to_image, Mesh_render_to_image_withmy_bbox
     import sys
-    sys.path.insert(0, "E:/workspace/igl_python/")
+    from configs.config import igl_python_path
+    sys.path.insert(0, igl_python_path)
     import pyigl as igl
     import numpy as np
     from triangle_raster import MetroMesh
     from fitting.util import read_igl_obj, add_vertex_faces
     from fitting.landmarks import load_embedding
 
-    sys.path.insert(0, "D:/mproject/meshlab2016/meshlab/src/x64/Release/")
+    from configs.config import meshlab_python_path
+    sys.path.insert(0, meshlab_python_path)
     import meshlab_python
 
     hair_file_dir = "E:\workspace/dataset/hairstyles/" + "hair/convert_hair_dir/"  # "hair/convert_hair/"
@@ -871,7 +875,8 @@ def generta_segment_map_batch(output_name, use_vertex_color=False):
 
 def caculate_EMD_distance_1d(H1, H2):
     import sys
-    sys.path.insert(0, "D:/mprojects/EmdL1_v3/EMD/x64/Release")
+    from configs.config import EmdL1_v3_path
+    sys.path.insert(0, EmdL1_v3_path)
     import EMD_PYTHON
     EMD_PYTHON.EMD_1D(H1, H2)
 
@@ -998,7 +1003,8 @@ class EMD_DIS(object):
 def seg_shape_similarity():
     hairs_seg_bin = load_binary_pickle('E:/workspace/dataset/hairstyles/hair/convert_hair_dir/seg_bin/seg_bin.pkl')
     import sys
-    sys.path.insert(0, "E:/workspace/EmdL1_v3/EMD/x64/Release/")
+    from configs.config import EmdL1_v3_path
+    sys.path.insert(0, EmdL1_v3_path)
     from EMD_PYTHON import EMD_1D
 
     source = 'strands00001_1000'
@@ -1039,7 +1045,7 @@ def seg_shape_similarity():
 
 
 def seg_dir_similarity():
-    hair_seg_dir_path = 'E:/workspace/dataset/hairstyles/hair/convert_hair_dir/render_hair_dir_seg/'
+    hair_seg_dir_path = direction_database_dir
     import cv2
     source = 'strands00153_1000'
     img_source = cv2.imread(hair_seg_dir_path + source + '.png', cv2.IMREAD_COLOR)
@@ -1074,17 +1080,17 @@ def seg_dir_similarity():
         emd_array.append(emd1)
     emd_array.sort()
     safe_mkdirs(
-        'E:/workspace/dataset/hairstyles/hair/convert_hair_dir/render_hair_dir_seg/' + source + '_similarity' + str(
+        direction_database_dir + source + '_similarity' + str(
             use_emd) + '/')
     for i in range(0, len(emd_array)):
         print emd_array[i].name, emd_array[i].dis, emd_array[i].flip
-        img_path = 'E:/workspace/dataset/hairstyles/hair/convert_hair_dir/render_hair_dir_seg/' + emd_array[
+        img_path = direction_database_dir + emd_array[
             i].name + '.png'
         img = cv2.imread(img_path, cv2.IMREAD_COLOR)
         if emd_array[i].flip:
             img = img[:, ::-1, :]
         cv2.imwrite(
-            'E:/workspace/dataset/hairstyles/hair/convert_hair_dir/render_hair_dir_seg/' + source + '_similarity' + str(
+            direction_database_dir + source + '_similarity' + str(
                 use_emd) + '/'
             + str(i) + '.png', img)
 
@@ -1127,7 +1133,7 @@ def dir_seg_distance(seg_img1, seg_img2):
 def generate_hair_dir_single():
     hair_seg_path = 'E:/workspace/dataset/hairstyles/hair/convert_hair_dir/render_hair_seg_body/'
     hair_dir_path = 'E:/workspace/dataset/hairstyles/hair/convert_hair_dir/render_hair_dir_body/'
-    hair_seg_dir_path = 'E:/workspace/dataset/hairstyles/hair/convert_hair_dir/render_hair_dir_seg/'
+    hair_seg_dir_path = direction_database_dir
     import cv2
     b = FileFilt()
     b.FindFile(dirr=hair_seg_path)
@@ -1221,14 +1227,24 @@ def test_scale_bbox():
     cv2.imwrite(out_put_dir + 'A1301043678290A_2.png', scaled_img[::-1, :, :])
 
 
-def get_similar_hair_from_database_wraper(input_seg_img, input_dir_img, seg_database_path, seg_database_input_dir,
-                                          direction_database_dir, out_put_dir):
-    hair_seg_dir_path = 'E:/workspace/dataset/hairstyles/hair/convert_hair_dir/render_hair_dir_seg/'
+def get_similar_hair_from_database_wrapper(input_seg_img, input_dir_img, seg_database_path, seg_database_input_dir,
+                                           hair_seg_dir_path, out_put_dir):
+    """
+
+    :param input_seg_img:
+    :param input_dir_img:
+    :param seg_database_path:
+    :param seg_database_input_dir:
+    :param hair_seg_dir_path:
+    :param out_put_dir:
+    :return:
+    """
+    import cv2
     bin_map = {}
     img = input_seg_img
     y_scale_up = 4.0
     y_scale_down = 20.0
-
+    # 统计当前分割图的特征向量
     seg_img, theata_bin = caculate_hair_seg_bin(img, [(img.shape[1] - 1) / 2.0,
                                                       (img.shape[0] - 1) / (1 + y_scale_down / y_scale_up)])
 
@@ -1237,7 +1253,8 @@ def get_similar_hair_from_database_wraper(input_seg_img, input_dir_img, seg_data
     hairs_seg_bin = load_binary_pickle(
         seg_database_path)  # load_binary_pickle('E:/workspace/dataset/hairstyles/hair/convert_hair_dir/seg_bin/seg_bin.pkl')
     import sys
-    sys.path.insert(0, "E:/workspace/EmdL1_v3/EMD/x64/Release/")
+    from configs.config import EmdL1_v3_path
+    sys.path.insert(0, EmdL1_v3_path)
     from EMD_PYTHON import EMD_1D
 
     emd_array = []
@@ -1247,8 +1264,8 @@ def get_similar_hair_from_database_wraper(input_seg_img, input_dir_img, seg_data
     # print EMD_1D([1, 2, 3, 5], [4, 8, 12, 20])
     img_source = input_dir_img
     img_source = img_source.astype(np.float)
-    import cv2
-    weight_c = 0.5
+
+    weight_c = 0.1  # 越小，则分割图形状占比越高
     for key, value in hairs_seg_bin.items():
         # print key, 'corresponds to', value
         if use_emd:
@@ -1259,24 +1276,24 @@ def get_similar_hair_from_database_wraper(input_seg_img, input_dir_img, seg_data
         img_seg = cv2.imread(k, cv2.IMREAD_COLOR)
         img_seg = img_seg.astype(np.float)
         dis1 = dir_seg_distance(img_source, img_seg)
-        print  distance1, dis1
+        print ("分割距离%s,方向距离%s" % (distance1, dis1))
         emd1 = EMD_DIS(distance1 + weight_c * dis1, key, False, use_emd)
         emd_array.append(emd1)
         if use_emd:
             distance2 = EMD_1D(source_bin.tolist(), value[::-1].tolist())
         else:
             distance2 = np.linalg.norm(source_bin - value[::-1])
-        dis2 = dir_seg_distance(img_source, img_seg[:, ::-1, :])
-        print  distance2, dis2
+        dis2 = dir_seg_distance(img_source, img_seg[:, ::-1, :])  # 反向距离
+        print ("分割距离%s,反向方向距离%s" % (distance2, dis2))
         emd2 = EMD_DIS(distance2 + weight_c * dis2, key, True, use_emd)
         emd_array.append(emd2)
-    emd_array.sort()
+    emd_array.sort()  # 从小到大
     safe_mkdirs(out_put_dir + '/')
 
     # 计算方向间距离
 
     if 0:
-        hair_seg_dir_path = 'E:/workspace/dataset/hairstyles/hair/convert_hair_dir/render_hair_dir_seg/'
+        hair_seg_dir_path = direction_database_dir
         import cv2
         source = 'source_'
         img_source = input_dir_img  # cv2.imread(hair_seg_dir_path + source + '.png', cv2.IMREAD_COLOR)
@@ -1318,7 +1335,7 @@ def get_similar_hair_from_database_wraper(input_seg_img, input_dir_img, seg_data
                 use_emd) + '/')
         for i in range(0, len(emd_array_dir)):
             print emd_array_dir[i].name, emd_array_dir[i].dis, emd_array_dir[i].flip
-            img_path = 'E:/workspace/dataset/hairstyles/hair/convert_hair_dir/render_hair_dir_seg/' + emd_array_dir[
+            img_path = direction_database_dir + emd_array_dir[
                 i].name + '.png'
             img = cv2.imread(img_path, cv2.IMREAD_COLOR)
             if emd_array_dir[i].flip:
@@ -1350,7 +1367,7 @@ def get_similar_hair_from_database_wraper(input_seg_img, input_dir_img, seg_data
             dis = dir_seg_distance(img_source, diretion_img)
             if dis < min_dis:
                 min_dis_corr_idx = i
-    print min_dis_corr_idx
+    print("距离最小的序号:%s" % min_dis_corr_idx)
     direction_img_path = direction_database_dir + '/' + emd_array[min_dis_corr_idx].name + '.png'
     diretion_img = cv2.imread(direction_img_path, cv2.IMREAD_COLOR)
     safe_mkdirs(
@@ -1410,18 +1427,33 @@ def caculate_lanmark_bbox(landmark_2d):
 
 
 def get_similar_hair_from_database(input_seg_img, input_dir_img, out_put_dir):
-    seg_database_path = 'E:/workspace/dataset/hairstyles/hair/convert_hair_dir/seg_bin/seg_bin.pkl'
-    seg_database_input_dir = 'E:/workspace/dataset/hairstyles/hair/convert_hair_dir/seg_bin/'
-    direction_database_dir = 'E:/workspace/dataset/hairstyles/hair/convert_hair_dir/render_hair_dir_seg/'
-    emd_array = get_similar_hair_from_database_wraper(
+    """   根据形状图和方向图 从数据库中检索
+    :param input_seg_img:
+    :param input_dir_img:
+    :param out_put_dir:
+    :return:
+    """
+    from configs.config import seg_database_path, seg_database_input_dir, direction_database_dir
+    emd_array = get_similar_hair_from_database_wrapper(
         input_seg_img=input_seg_img, input_dir_img=input_dir_img, seg_database_path=seg_database_path,
-        seg_database_input_dir=seg_database_input_dir, direction_database_dir=direction_database_dir,
+        seg_database_input_dir=seg_database_input_dir, hair_seg_dir_path=direction_database_dir,
         out_put_dir=out_put_dir)
     return emd_array
 
 
 def build_hair_for_img_simgle(object_name, input_ori_img_file, input_seg_img_file, input_dir_img_file,
                               input_landmark_file, out_put_dir, project_dir):
+    """  生成头发模型
+    :param object_name: 文件名
+    :param input_ori_img_file: 图片原图路径
+    :param input_seg_img_file: 头发分割图路径
+    :param input_dir_img_file: 头发方向图路径
+    :param input_landmark_file:  特征点路径
+    :param out_put_dir:
+    :param project_dir:
+    :return:
+    """
+
     import cv2
     from triangle_raster import BBoxi_2d
     from fitting.util import rescale_imge_with_bbox, read_landmark
@@ -1460,9 +1492,12 @@ def build_hair_for_img_simgle(object_name, input_ori_img_file, input_seg_img_fil
                 pass
     cv2.imwrite(out_put_dir + '/' + object_name + '_scaled.png', scaled_img[::-1, :, :])
     cv2.imwrite(out_put_dir + '/' + object_name + '_dir_scaled.png', scaled_dir_img[::-1, :, :])
+    cv2.imwrite(out_put_dir + '/' + object_name + '_ori.png', ori_img)
     input_seg_img = cv2.imread(out_put_dir + '/' + object_name + '_scaled.png', cv2.IMREAD_COLOR)
     input_dir_img = cv2.imread(out_put_dir + '/' + object_name + '_dir_scaled.png', cv2.IMREAD_COLOR)
+
     # out_put_dir =''
+    # 从数据库检索
     emd_array = get_similar_hair_from_database(input_seg_img, input_dir_img, out_put_dir)
     # 根据landmark ，以及Frame 模型3d landmark点 得到 选择矩阵，放缩矩阵，平移
     # R =[]
@@ -1473,8 +1508,9 @@ def build_hair_for_img_simgle(object_name, input_ori_img_file, input_seg_img_fil
     # Scale_local = 1
     # T_local =[]
     from fitting.util import get_opt_transform_3d, get_opt_transform_2d, readImage, sample_color_from_img
-    hair_mesh_obj_database_dir = 'E:/workspace/dataset/hairstyles/hair/convert_hair_dir/'
-    model_dir = 'E:/workspace/dataset/hairstyles/'
+    from configs.config import hair_mesh_obj_database_dir, hairstyles_workspace, frame_template_retex_path
+
+    model_dir = hairstyles_workspace
     v_frame_aligned, f_frame_aligned, t_frame_aligned, t_f_frame_aligned, n_frame_aligned, n_f_frame_aligned = read_igl_obj(
         model_dir + 'frame_aligned.obj')
     v_frame_init, f_frame_init, t_frame_init, t_f_frame_init, n_frame_init, n_f_frame_init = read_igl_obj(
@@ -1494,13 +1530,10 @@ def build_hair_for_img_simgle(object_name, input_ori_img_file, input_seg_img_fil
         from face_generate import generate_face
         import os
         if os.path.exists(project_dir + object_name + '/' + 'generate_face/' + '/face_result.pkl'):
-            pass
-
             result = load_binary_pickle(
                 filepath=project_dir + object_name + '/' + 'generate_face/' + '/face_result.pkl')
-            frame_re_texture_map = 'D:\mproject/face-reconstruct/texpc\source_para/texture/frame_template_retex.obj'
             v_frame_re_texture, f_frame_re_texture, t_frame_re_texture, t_f_frame_re_texture, n_re_texture, n_f_re_texture = read_igl_obj(
-                frame_re_texture_map)
+                frame_template_retex_path)
             v_aligned = result['mesh_v']
             face_aligned_f = result['mesh_f']
             oriimage_file_path = project_dir + object_name + '/' + object_name + '.jpg'
@@ -1603,35 +1636,41 @@ def build_hair_for_img_simgle(object_name, input_ori_img_file, input_seg_img_fil
                            'useemd_' + str(isuse_emd) + '_' + str(i) + '_corr_' + strand_name + '_flip_' + str(
                 flip) + '.obj')
         if 1:
-            sys.path.insert(0, "D:/mproject/meshlab2016/meshlab/src/x64/Release/")
+            from configs.config import meshlab_python_path
+            sys.path.insert(0, meshlab_python_path)
             import meshlab_python
             bbox_list = [float(0), float(0), float(-600), float(width),
                          float(height), float(600)]
             v_color = v_color.astype(np.int32)
             merge_v, merge_f = add_vertex_faces(v_hair_transformed, f_hair, v_frame_align_to_image, f_frame_init)
             merge_color = np.vstack((v_color, v_color_caculate))
-            if 0:
+            if 0:  # 只包含头发
                 result = meshlab_python.Mesh_render_to_image_withmy_bbox(out_put_dir + '/' +
                                                                          'useemd_' + str(isuse_emd) + '_' + str(
                     i) + '_corr_' + strand_name + '_flip_' + str(flip) + 'render_to_image' + '.png',
                                                                          v_hair_transformed.tolist(), f_hair.tolist(),
                                                                          [], [], [], [], v_color.tolist(),
                                                                          int(width), int(height), bbox_list)
-            else:
+            else:  # 包含脸
                 result = meshlab_python.Mesh_render_to_image_withmy_bbox(out_put_dir + '/' +
-                                                                         'useemd_' + str(isuse_emd) + '_' + str(
+                                                                         'useemd_' + str(isuse_emd) + '_pri_' + str(
                     i) + '_corr_' + strand_name + '_flip_' + str(flip) + 'render_to_image' + '.png',
                                                                          merge_v.tolist(), merge_f.tolist(), [], [], [],
                                                                          [], merge_color.tolist(),
                                                                          int(width), int(height), bbox_list)
-                render_img = np.array(result[0])
-                z_buffer_img = np.array(result[1])
-                cv2.imwrite(out_put_dir + '/' + 'render_img.png', render_img[:, :, ::-1])
-                cv2.imwrite(out_put_dir + '/' + 'z_buffer_img.png', z_buffer_img)
+                if i == 0:
+                    render_img = np.array(result[0])
+                    z_buffer_img = np.array(result[1])
+                    cv2.imwrite(out_put_dir + '/' + 'render_img.png', render_img[:, :, ::-1])
+                    cv2.imwrite(out_put_dir + '/' + 'z_buffer_img.png', z_buffer_img)
                 # print result
 
 
 def build_hair_for_img_batch():
+    """
+    no usage
+    :return:
+    """
     # img_dir = 'E:/workspace/dataset/hairstyles/2d_hair/'
     # landmark_dir = 'E:/workspace/vrn_data/bgBlue/'
     img_dir = 'E:\workspace/vrn_data\hair_crop\man_crop/'
@@ -1654,7 +1693,7 @@ def build_hair_for_img_batch():
         filename_split = k.split("/")[-1].split(".")
         #        print filename_split
         if len(filename_split) > 1:
-            print str(filename_split[-2])
+            print(str(filename_split[-2]))
             file_name = str(filename_split[-2])
             fomat_name = str(filename_split[-1])
         else:

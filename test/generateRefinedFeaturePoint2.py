@@ -1,7 +1,8 @@
 # -- coding: utf-8 --
 
 import sys
-sys.path.insert(0, "D:/mprojects/libiglfull/libigl/python/build/x64/Release")
+from configs.config import igl_python_path
+sys.path.insert(0, igl_python_path)
 import pyigl as igl
 from os.path import join
 from fitting.util import safe_mkdir, mat_save,mat_load,IglMatrixTonpArray,FileFilt,write_simple_obj,k_main_dir_sklearn

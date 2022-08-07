@@ -10,7 +10,8 @@ from os.path import join
 from smpl_webuser.serialization import load_model
 from fitting.util import write_simple_obj, safe_mkdirs,FileFilt,read_igl_obj,get_vertex_normal,write_full_obj
 import sys
-sys.path.insert(0, "D:/mproject/meshlab2016/meshlab/src/x64/Release/")
+from configs.config import meshlab_python_path
+sys.path.insert(0, meshlab_python_path)
 import meshlab_python
 
 

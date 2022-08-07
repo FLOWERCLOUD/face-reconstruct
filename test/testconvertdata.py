@@ -1,7 +1,8 @@
 # -- coding: utf-8 --
 
 import sys
-sys.path.insert(0, "D:/mprojects/libiglfull/libigl/python/build/x64/Release")
+from configs.config import igl_python_path
+sys.path.insert(0, igl_python_path)
 import pyigl as igl
 from os.path import join
 
@@ -45,7 +46,8 @@ from triangle_raster import  FP_COLOR_TO_TEXTURE
 from triangle_raster import   MetroMesh
 from fitting.util import readVertexColor,write_full_obj,write_landmark_to_obj
 import sys
-sys.path.insert(0, "D:/mprojects/libiglfull/libigl/python/build/x64/Release")
+from configs.config import igl_python_path
+sys.path.insert(0, igl_python_path)
 import pyigl as igl
 import numpy as np
 V_igl = igl.eigen.MatrixXd()

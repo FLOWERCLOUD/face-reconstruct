@@ -1,5 +1,6 @@
 import sys
-sys.path.insert(0, "D:/mproject/pyembree-master/pyembree/")
+from configs.config import pyembree_path
+sys.path.insert(0, pyembree_path)
 import sys
 import time
 

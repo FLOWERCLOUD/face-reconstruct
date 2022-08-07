@@ -1,7 +1,8 @@
 # -- coding: utf-8 --
 
 import sys
-sys.path.insert(0, "D:/mprojects/libiglfull/libigl/python/build/x64/Release")
+from configs.config import igl_python_path
+sys.path.insert(0, igl_python_path)
 import pyigl as igl
 from fitting.landmarks import load_embedding
 from smpl_webuser.serialization import load_model
