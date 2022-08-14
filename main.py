@@ -8,7 +8,7 @@
 """
 import cv2
 from fitting.util import FileFilt
-from face_generate import generate_face
+from face_generate import generate_face, frame_head_optimaization, read_igl_obj, write_full_obj
 from strand_convert import build_hair_for_img_simgle
 
 
@@ -97,7 +97,8 @@ def build_hair(img_dir, landmark_dir=None, skipfilename_list=None):
                                   #           input_landmark_file = landmark_dir+file_name+'/'+'2d/'+file_name+'.txt',
                                   input_landmark_file=landmark_dir + '/' + file_name + '.txt',
                                   out_put_dir=img_dir + '/result/' + file_name + '/' + 'builded_hair/',
-                                  project_dir=img_dir)
+                                  project_dir=img_dir,
+                                  frame_back_path="D:/mproject/face-reconstruct_hide/texpc/frame_back2.txt")
 
 
 def testcase1():
@@ -116,8 +117,23 @@ def testcase2():
     build_hair("E:/workspace/vrn_data/avata-testdata/")
 
 
+def testcase3():
+    """
+    头部优化
+    :return:
+    """
+    import numpy as np
+    mesh_v, mesh_f, t_frame_aligned, t_f_frame_aligned, n_frame_aligned, n_f_frame_aligned = read_igl_obj(
+        'E:\workspace\dataset\hairstyles/frame_aligned.obj')
+    optim_v = frame_head_optimaization(mesh_v, mesh_f,
+                                       fram_back_path="D:/mproject/face-reconstruct_hide/texpc/frame_back2.txt")
+    write_full_obj(optim_v, mesh_f, n_frame_aligned, n_f_frame_aligned, np.array([]), np.array([]),
+                   np.array([]), 'E:\workspace\dataset\hairstyles/frame_aligned_refined.obj')
+
+
 def run():
     # testcase1()
+    # testcase2()
     testcase2()
 
 

@@ -1622,7 +1622,7 @@ def generate_mesh_with_color():
                    'E:\workspace/vrn_data/bgBlue/A13010436665609/generate_face/A1301074625120A_with_color.obj')
 
 
-def frame_head_optimaization(v, f):
+def frame_head_optimaization(v, f, fram_back_path="D:/mproject/face-reconstruct_hide/texpc/frame_back2.txt"):
     left_v = v[1100]
     right_v = v[305]
     center_v = (left_v + right_v) / 2.0
@@ -1633,7 +1633,6 @@ def frame_head_optimaization(v, f):
     pre_head_scale = 0.192929
     scale = head_scale / pre_head_scale
     from fitting.util import read_int, Harmonic
-    fram_back_path = 'D:/mproject/face-reconstruct/texpc/frame_back2.txt'
     frame_back_idx = read_int(fram_back_path)
     frame_back_idx = frame_back_idx[:, 0].tolist()
     all_index = range(0, v.shape[0])

@@ -1,15 +1,21 @@
 # -- coding: utf-8 --
 import array
-import numpy as np
-from numba import jit
-from fitting.util import write_simple_obj, add_vertex_faces, FileFilt, write_full_obj, readVertexColor, \
-    write_landmark_to_obj, \
-    save_binary_pickle, load_binary_pickle, safe_mkdirs, read_igl_obj, get_vertex_normal
 import math
+import os
+import sys
+import cv2
 from math import sin, cos, atan, pi
 from time import time
-import sys
+
+import numpy as np
+from numba import jit
+
 from configs.config import direction_database_dir
+from face_generate import frame_head_optimaization
+from face_generate import generate_face
+from fitting.util import add_vertex_faces, FileFilt, write_full_obj, readVertexColor, \
+    write_landmark_to_obj, \
+    save_binary_pickle, load_binary_pickle, safe_mkdirs, read_igl_obj, get_vertex_normal
 
 
 def print_para_resut(step, timer_end, timer_start):
@@ -182,7 +188,6 @@ def cacaulate_rot(stran_dir, Et, En, Eb):
 
 
 def get_rad_from2d_dir(dir):
-    from math import pi
     if np.linalg.norm(dir) < 0.00001:
         print 'get_rad_from2d_dir wrong,norm', np.linalg.norm(dir)
     dir /= np.linalg.norm(dir)
@@ -660,11 +665,8 @@ def generate_polystrip_mesh_with_dir_color():
 
 def generta_segment_map():
     from z_buffer_raster import Mesh_render_to_image
-    import sys
     from configs.config import igl_python_path
     sys.path.insert(0, igl_python_path)
-    import pyigl as igl
-    import numpy as np
     from triangle_raster import MetroMesh
     from fitting.util import read_igl_obj, add_vertex_faces
     hair_file_dir = "G:/yuanqing/faceproject/hairstyles/hairstyles/" + "hair/convert_hair"
@@ -695,19 +697,14 @@ def generta_segment_map():
 
 
 def generta_segment_map_batch(output_name, use_vertex_color=False):
-    from z_buffer_raster import Mesh_render_to_image, Mesh_render_to_image_withmy_bbox
-    import sys
     from configs.config import igl_python_path
     sys.path.insert(0, igl_python_path)
-    import pyigl as igl
-    import numpy as np
     from triangle_raster import MetroMesh
     from fitting.util import read_igl_obj, add_vertex_faces
     from fitting.landmarks import load_embedding
 
     from configs.config import meshlab_python_path
     sys.path.insert(0, meshlab_python_path)
-    import meshlab_python
 
     hair_file_dir = "E:\workspace/dataset/hairstyles/" + "hair/convert_hair_dir/"  # "hair/convert_hair/"
     head_filr_dir = "E:\workspace/dataset/hairstyles/"
@@ -874,7 +871,6 @@ def generta_segment_map_batch(output_name, use_vertex_color=False):
 
 
 def caculate_EMD_distance_1d(H1, H2):
-    import sys
     from configs.config import EmdL1_v3_path
     sys.path.insert(0, EmdL1_v3_path)
     import EMD_PYTHON
@@ -930,8 +926,6 @@ def caculate_hair_seg_bin(image, center):
 
 
 def caculate_hair_seg_bin_batch(input_seg, input_dir, out_seg_bin, out_dir_bin):
-    import cv2
-
     b = FileFilt()
     b.FindFile(dirr=input_seg)
     count = 0
@@ -1002,7 +996,6 @@ class EMD_DIS(object):
 
 def seg_shape_similarity():
     hairs_seg_bin = load_binary_pickle('E:/workspace/dataset/hairstyles/hair/convert_hair_dir/seg_bin/seg_bin.pkl')
-    import sys
     from configs.config import EmdL1_v3_path
     sys.path.insert(0, EmdL1_v3_path)
     from EMD_PYTHON import EMD_1D
@@ -1031,7 +1024,6 @@ def seg_shape_similarity():
     emd_array.sort()
     safe_mkdirs(
         'E:/workspace/dataset/hairstyles/hair/convert_hair_dir/seg_bin/' + source + '_similarity' + str(use_emd) + '/')
-    import cv2
     for i in range(0, len(emd_array)):
         img_path = 'E:/workspace/dataset/hairstyles/hair/convert_hair_dir/seg_bin/' + emd_array[i].name + '.png'
         img = cv2.imread(img_path, cv2.IMREAD_COLOR)
@@ -1046,7 +1038,6 @@ def seg_shape_similarity():
 
 def seg_dir_similarity():
     hair_seg_dir_path = direction_database_dir
-    import cv2
     source = 'strands00153_1000'
     img_source = cv2.imread(hair_seg_dir_path + source + '.png', cv2.IMREAD_COLOR)
     emd_array = []
@@ -1134,7 +1125,6 @@ def generate_hair_dir_single():
     hair_seg_path = 'E:/workspace/dataset/hairstyles/hair/convert_hair_dir/render_hair_seg_body/'
     hair_dir_path = 'E:/workspace/dataset/hairstyles/hair/convert_hair_dir/render_hair_dir_body/'
     hair_seg_dir_path = direction_database_dir
-    import cv2
     b = FileFilt()
     b.FindFile(dirr=hair_seg_path)
 
@@ -1173,7 +1163,6 @@ def test():
 
 
 def test_scale_bbox():
-    import cv2
     from triangle_raster import BBoxi_2d
     from fitting.util import rescale_imge_with_bbox, read_landmark
     input_dir = 'E:/workspace/dataset/hairstyles/2d_hair/Seg_refined/'
@@ -1239,7 +1228,6 @@ def get_similar_hair_from_database_wrapper(input_seg_img, input_dir_img, seg_dat
     :param out_put_dir:
     :return:
     """
-    import cv2
     bin_map = {}
     img = input_seg_img
     y_scale_up = 4.0
@@ -1252,7 +1240,6 @@ def get_similar_hair_from_database_wrapper(input_seg_img, input_dir_img, seg_dat
     source_bin = theata_bin
     hairs_seg_bin = load_binary_pickle(
         seg_database_path)  # load_binary_pickle('E:/workspace/dataset/hairstyles/hair/convert_hair_dir/seg_bin/seg_bin.pkl')
-    import sys
     from configs.config import EmdL1_v3_path
     sys.path.insert(0, EmdL1_v3_path)
     from EMD_PYTHON import EMD_1D
@@ -1294,7 +1281,6 @@ def get_similar_hair_from_database_wrapper(input_seg_img, input_dir_img, seg_dat
 
     if 0:
         hair_seg_dir_path = direction_database_dir
-        import cv2
         source = 'source_'
         img_source = input_dir_img  # cv2.imread(hair_seg_dir_path + source + '.png', cv2.IMREAD_COLOR)
         img_source = img_source.astype(np.float)
@@ -1344,8 +1330,6 @@ def get_similar_hair_from_database_wrapper(input_seg_img, input_dir_img, seg_dat
                 out_put_dir + source + '_similarity' + str(
                     use_emd) + '/'
                 + str(i).zfill(3) + '_' + emd_array_dir[i].name + '_flip_' + str(emd_array_dir[i].flip) + '.png', img)
-
-    import cv2
 
     # cv2.imwrite(out_put_dir + '/' + 'soure_seg_bin' + '.png',
     #             seg_img)
@@ -1442,7 +1426,7 @@ def get_similar_hair_from_database(input_seg_img, input_dir_img, out_put_dir):
 
 
 def build_hair_for_img_simgle(object_name, input_ori_img_file, input_seg_img_file, input_dir_img_file,
-                              input_landmark_file, out_put_dir, project_dir):
+                              input_landmark_file, out_put_dir, project_dir, frame_back_path):
     """  生成头发模型
     :param object_name: 文件名
     :param input_ori_img_file: 图片原图路径
@@ -1451,11 +1435,9 @@ def build_hair_for_img_simgle(object_name, input_ori_img_file, input_seg_img_fil
     :param input_landmark_file:  特征点路径
     :param out_put_dir:
     :param project_dir:
+    :param frame_back_path: 头部点索引
     :return:
     """
-
-    import cv2
-    from triangle_raster import BBoxi_2d
     from fitting.util import rescale_imge_with_bbox, read_landmark
     safe_mkdirs(out_put_dir + '/')
     # landmark_file = 'E:/workspace/vrn_data/bgBlue/A1301043678290A/2d/A1301043678290A.txt'
@@ -1507,7 +1489,7 @@ def build_hair_for_img_simgle(object_name, input_ori_img_file, input_seg_img_fil
     # R_Local =[]
     # Scale_local = 1
     # T_local =[]
-    from fitting.util import get_opt_transform_3d, get_opt_transform_2d, readImage, sample_color_from_img
+    from fitting.util import get_opt_transform_3d, readImage
     from configs.config import hair_mesh_obj_database_dir, hairstyles_workspace, frame_template_retex_path
 
     model_dir = hairstyles_workspace
@@ -1517,7 +1499,6 @@ def build_hair_for_img_simgle(object_name, input_ori_img_file, input_seg_img_fil
         model_dir + 'frame_female_init.obj')
     # landmark embedding
     lmk_emb_path = './data/lmk_embedding_intraface_to_flame.pkl'
-    from fitting.util import mesh_points_by_barycentric_coordinates
     from fitting.landmarks import load_embedding
     lmk_face_idx, lmk_b_coords = load_embedding(lmk_emb_path)
     from fitting.util import mesh_points_by_barycentric_coordinates, get_vertex_normal, sample_color_from_img
@@ -1527,15 +1508,17 @@ def build_hair_for_img_simgle(object_name, input_ori_img_file, input_seg_img_fil
     if 0:
         Scale, R, T = get_opt_transform_2d(frame_landmark_3d, cast_landmark)
     else:
-        from face_generate import generate_face
-        import os
+
         if os.path.exists(project_dir + object_name + '/' + 'generate_face/' + '/face_result.pkl'):
             result = load_binary_pickle(
                 filepath=project_dir + object_name + '/' + 'generate_face/' + '/face_result.pkl')
             v_frame_re_texture, f_frame_re_texture, t_frame_re_texture, t_f_frame_re_texture, n_re_texture, n_f_re_texture = read_igl_obj(
-                frame_template_retex_path)
+                frame_template_retex_path) # 用于获得t_frame_re_texture
             v_aligned = result['mesh_v']
             face_aligned_f = result['mesh_f']
+            optim_v = frame_head_optimaization(v_aligned, face_aligned_f,
+                                               fram_back_path=frame_back_path)
+            v_aligned = optim_v
             oriimage_file_path = project_dir + object_name + '/' + object_name + '.jpg'
             ori_image = readImage(oriimage_file_path)
             ori_image = ori_image[::-1, :, :]
@@ -1679,7 +1662,6 @@ def build_hair_for_img_batch():
     # landmark_dir = 'E:\workspace/vrn_data/bgBlue\Landmark/'
     # img_dir = 'E:\workspace/vrn_data\hair_crop\girl_crop/'
     # landmark_dir = 'E:\workspace/vrn_data\hair_crop\girl_crop/Landmark/'
-    import cv2
     b = FileFilt()
     b.FindFile(dirr=img_dir)
     skip_file = ['hairgirl_000', 'hairgirl_001', 'hairman_002', 'hairman_003', 'hairman_005', 'hairman_013',
