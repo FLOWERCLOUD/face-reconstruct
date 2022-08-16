@@ -7,9 +7,12 @@
 @desc:
 """
 import cv2
+import os
 from fitting.util import FileFilt
 from face_generate import generate_face, frame_head_optimaization, read_igl_obj, write_full_obj
 from strand_convert import build_hair_for_img_simgle
+
+BASE_DIR = os.path.dirname(__file__)  # 当前文件所在目录
 
 
 def generate_shape(project_dir="", gender_map={}):
@@ -52,12 +55,13 @@ def generate_shape(project_dir="", gender_map={}):
                                    out_put_dir=project_dir + '/' + obj_name + '/generate_face/', use_3d_landmark=False)
 
 
-def build_hair(img_dir, landmark_dir=None, skipfilename_list=None):
+def build_hair(img_dir, landmark_dir=None, skipfilename_list=None, frame_back_path=""):
     """
     生成头发，目录应包含分割图，头发走向
     :param img_dir: 项目地址，每个子文件夹包含图片和包含特征点
     :param landmark_dir: 从每个子文件夹目录的2d特征点中获取
     :param skipfilename_list:
+    :param frame_back_path: 网格后脑坐标点序号
     :return:
     """
     img_dir = img_dir + '/'
@@ -98,7 +102,7 @@ def build_hair(img_dir, landmark_dir=None, skipfilename_list=None):
                                   input_landmark_file=landmark_dir + '/' + file_name + '.txt',
                                   out_put_dir=img_dir + '/result/' + file_name + '/' + 'builded_hair/',
                                   project_dir=img_dir,
-                                  frame_back_path="D:/mproject/face-reconstruct_hide/texpc/frame_back2.txt")
+                                  frame_back_path=frame_back_path)
 
 
 def testcase1():
@@ -114,7 +118,9 @@ def testcase2():
     """ 执行这个之前，已生成图片分割图
     :return:
     """
-    build_hair("E:/workspace/vrn_data/avata-testdata/")
+    frame_back_path = os.path.join(BASE_DIR, "data", "frame_back2.txt").replace("\\", "/")
+    build_hair("E:/workspace/vrn_data/avata-testdata/",
+               frame_back_path=frame_back_path)
 
 
 def testcase3():
